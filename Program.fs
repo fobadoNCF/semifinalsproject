@@ -34,7 +34,7 @@ type Seat =
         printfn $"{seat.ToString()}\t {seat.Reservee}"
 
     static member DisplayCodeIfAvailable seat = 
-        printfn "%s" (if seat.Reservee = None then $"{seat.ToString()}" else " X ")
+        printf "%s" (if seat.Reservee = None then $"{seat.ToString()} " else " X  ")
 
 type Seats = 
     {
@@ -80,14 +80,21 @@ type Seats =
         printfn "Seats:\n"
         seats.Seats
         |> List.iter
-            ( fun seat -> Seat.DisplayCodeIfAvailable seat )
+            ( fun seat -> 
+                if (Seat.Index seat) % 4 = 0 then printfn ""
+                Seat.DisplayCodeIfAvailable seat
+            )
         printfn ""
 
     static member DisplayReservations seats =
         printfn "Reservations:\n"
         printfn "Seat\tReservee"
         seats.Seats
-            |> List.iter Seat.DisplayInListFormat
+            |> List.iter 
+                (
+                    fun seat -> 
+                        Seat.DisplayInListFormat seat
+                )
         printfn ""
 
     static member EmptySeats =
@@ -149,11 +156,6 @@ type Data =
         File.WriteAllText (path, json)
         data
 
-    
-
-let data' = Seats.EmptySeats
-let data'' = Data.UpdateData "./Data.json" data'
-
 
 let file = { Path = "./Data.json" }
 
@@ -202,7 +204,7 @@ let handleReservation (data: Data) (seat: Seat) =
         let reservee = getInput "Input reservee's name"
         {
             data with
-                Seats = Seats.Reserve seat seats reservee
+                Seats = Data.UpdateData data.File.Path (Seats.Reserve seat seats reservee)
                 Fun = printfn "\nLog: Seat reservation successful.\n\n"
         }
     else
@@ -212,7 +214,7 @@ let handleReservation (data: Data) (seat: Seat) =
 
 let rec createReservation (data: Data) = 
 
-    match getInput "Input seat code (Ex. 01A) or 0 to Exit" with
+    match (getInput "Input seat code (Ex. 01A) or 0 to Exit").ToUpper() with
     | "0" -> { data with Fun = printf "\nLog: Exiting reservation menu..\n\n" }
     | SeatCode seat -> createReservation (handleReservation data seat)
     | _ -> createReservation { data with Fun = printf "\nLog: Invalid Input..\n\n" }
@@ -225,17 +227,16 @@ let rec handleTransfer (data: Data) (source: Seat) =
 
     if Seat.IsReserved (source)
     then
-        match getInput "Input seat code to transfer to" with
+        match (getInput "Input seat code to transfer to").ToUpper() with
         |  SeatCode destination -> 
             let indexDestination = Seat.Index destination
             let destination = seats.Item indexDestination
 
             if Seat.IsAvailable (destination)
             then 
-                let updated = Seats.TransferSeat source destination seats
                 {
                     data with 
-                        Seats = updated
+                        Seats = Data.UpdateData data.File.Path (Seats.TransferSeat source destination seats)
                         Fun = printf "\nLog: Seat transfer successful..\n\n"
                 }
             else
@@ -262,7 +263,7 @@ let rec transferSeats (data: Data) =
 
     Seats.DisplayReservations (Seats.GetReservedSeats data.Seats.Seats)
 
-    match getInput "Input seat code (Ex. 01A) or 0 to Exit" with
+    match (getInput "Input seat code (Ex. 01A) or 0 to Exit").ToUpper() with
     | "0" -> { data with Fun = printf "\nLog: Exiting transfering seats menu..\n\n" }
     | SeatCode seat -> transferSeats (handleTransfer data seat)
     | _ -> transferSeats { data with Fun = printf "\nLog: Invalid Input..\n\n" }
@@ -279,7 +280,7 @@ let rec handleCancellation (data: Data) (seatToCancel: Seat) =
         | "YES" -> 
             { 
                 data with 
-                    Seats = Seats.CancelReservation seatToCancel data.Seats.Seats 
+                    Seats = Data.UpdateData data.File.Path (Seats.CancelReservation seatToCancel data.Seats.Seats)
                     Fun = printf "\nLog: Reservation was successfully cancelled.\n\n"
             }
         | _ -> handleCancellation { data with Fun = printf "\nInvalid input..\n\n" } seatToCancel
@@ -292,7 +293,7 @@ let rec cancelReservation (data: Data) =
 
     Seats.DisplayReservations (Seats.GetReservedSeats data.Seats.Seats)
 
-    match getInput "Input seatcode (Ex. 01A) or 0 to Exit" with
+    match (getInput "Input seatcode (Ex. 01A) or 0 to Exit").ToUpper() with
     | "0" -> { data with Fun = printf "\nLog: Exiting cancel reservation menu\n\n" }
     | SeatCode seat -> cancelReservation (handleCancellation data seat)
     | _ -> transferSeats { data with Fun = printf "\nLog: Invalid Input..\n\n" }
