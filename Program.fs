@@ -73,7 +73,7 @@ type Seats =
         }
 
     static member DisplaySeats seats =
-        printfn "Seats:"
+        printfn "\nSeats:"
         seats.Seats
         |> List.iter
             ( fun seat -> 
@@ -212,6 +212,8 @@ let handleReservation (data: Data) (seat: Seat) =
 
 let rec createReservation (data: Data) = 
 
+    Seats.DisplaySeats data.Seats
+
     match (getInput "Input seat code (Ex. 01A) or 0 to Exit").ToUpper() with
     | "0" -> { data with Fun = printf "\nLog: Exiting reservation menu..\n\n" }
     | SeatCode seat -> createReservation (handleReservation data seat)
@@ -225,6 +227,7 @@ let rec handleTransfer (data: Data) (source: Seat) =
 
     if Seat.IsReserved (source)
     then
+        Seats.DisplaySeats data.Seats
         match (getInput "Input seat code to transfer to").ToUpper() with
         |  SeatCode destination -> 
             let indexDestination = Seat.Index destination
@@ -278,7 +281,7 @@ let rec handleCancellation (data: Data) (seatToCancel: Seat) =
         | "YES" -> 
             { 
                 data with 
-                    Seats = Data.UpdateData data.File.Path (Seats.CancelReservation seatToCancel data.Seats.Seats)
+                    Seats = Data.UpdateData data.File.Path (Seats.CancelReservation seatToCancel seats)
                     Fun = printf "\nLog: Reservation was successfully cancelled.\n\n"
             }
         | _ -> handleCancellation { data with Fun = printf "\nInvalid input..\n\n" } seatToCancel
