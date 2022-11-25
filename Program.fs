@@ -93,18 +93,18 @@ type Seats =
                 )
         printfn ""
 
-    static member EmptySeats =
-        {
-            Seats = 
-                [
-                    for i in 0..19 do
-                        for j in 0..3 ->
-                            {
-                                Code = i + 1, char (j + 65)
-                                Reservee = None
-                            }
-                ]
-        }
+    // static member EmptySeats =
+    //     {
+    //         Seats = 
+    //             [
+    //                 for i in 0..19 do
+    //                     for j in 0..3 ->
+    //                         {
+    //                             Code = i + 1, char (j + 65)
+    //                             Reservee = None
+    //                         }
+    //             ]
+    //     }
 
 type Serializer = 
 
@@ -151,29 +151,6 @@ type Data =
         let json = Serializer.Serialize data
         File.WriteAllText (path, json)
         data
-
-
-let file = { Path = "./Data.json" }
-
-let menu = 
-    {
-        Menu = 
-            Map 
-                [
-                    (0, "Exit")
-                    (1, "Create reservation/s")
-                    (2, "Transfer seat/s")
-                    (3, "Cancel a reservation")
-                ]
-    }
-
-let data = 
-    {
-        File = file
-        Seats = Data.GetData file.Path
-        Menu = menu
-        Fun = ()
-    }
 
 let getInput out =
     printf "%s >> " out
@@ -312,4 +289,27 @@ let rec reservationSystem (data: Data) =
     | "3" -> reservationSystem (cancelReservation data)
     | _ -> reservationSystem { data with Fun = printfn "\nLog: Invalid Input..\n\n"}
 
-(reservationSystem data).Fun
+
+let file = { Path = "./Data.json" }
+
+let menu = 
+    {
+        Menu = 
+            Map 
+                [
+                    (0, "Exit")
+                    (1, "Create reservation/s")
+                    (2, "Transfer seat/s")
+                    (3, "Cancel a reservation")
+                ]
+    }
+
+let data = 
+    {
+        File = file
+        Seats = Data.GetData file.Path
+        Menu = menu
+        Fun = ()
+    }
+
+reservationSystem data |> ignore
